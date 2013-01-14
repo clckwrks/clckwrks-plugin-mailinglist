@@ -12,7 +12,6 @@ import Happstack.Server             (Response, notFound, toResponse, serveFile, 
 import Happstack.Server.FileServe.BuildingBlocks (isSafePath)
 import Network.URI                  (unEscapeString)
 import System.FilePath              ((</>), makeRelative, splitDirectories)
-import Paths_clckwrks_plugin_bugs   (getDataDir)
 
 checkAuth :: MailingListURL
           -> MailingListM MailingListURL

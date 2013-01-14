@@ -39,7 +39,7 @@ subscribePage here =
 emailForm :: MailingListForm Email
 emailForm =
   (fieldset $ ol $
-       (li $ errorList ++> labelText "Email:" ++> (inputText mempty `transformEither` email))
+       (li $ errorList ++> label ("Email:" :: Text) ++> (inputText mempty `transformEither` email))
     <* (li $ inputSubmit (pack "subscribe"))
        )
   where

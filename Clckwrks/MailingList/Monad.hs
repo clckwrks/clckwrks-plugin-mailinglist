@@ -43,7 +43,7 @@ instance FormError MailingListFormError where
     commonFormError = MailingListCFE
 
 instance (Functor m, Monad m) => EmbedAsChild (MailingListT m) MailingListFormError where
-    asChild InvalidEmail = asChild "This is definitely not a valid email address."
+    asChild InvalidEmail = asChild ("This is definitely not a valid email address." :: T.Text)
     asChild e            = asChild (show e)
 
 type MailingListForm = ClckFormT MailingListFormError MailingListM
