@@ -16,6 +16,7 @@ import Data.Typeable       (Typeable)
 import qualified Data.Map  as Map
 import Data.Maybe          (fromMaybe)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import Happstack.Server
 import Happstack.Server.Internal.Monads (FilterFun)
 import HSP                  (Attr((:=)), Attribute(MkAttr), EmbedAsAttr(..), EmbedAsChild(..), IsName(toName), XMLGenT, XML, pAttrVal)
@@ -48,15 +49,15 @@ instance (Functor m, Monad m) => EmbedAsChild (MailingListT m) MailingListFormEr
 
 type MailingListForm = ClckFormT MailingListFormError MailingListM
 
-instance (IsName n) => EmbedAsAttr MailingListM (Attr n MailingListURL) where
+instance (IsName n TL.Text) => EmbedAsAttr MailingListM (Attr n MailingListURL) where
         asAttr (n := u) =
             do url <- showURL u
-               asAttr $ MkAttr (toName n, pAttrVal (T.unpack url))
+               asAttr $ MkAttr (toName n, pAttrVal (TL.fromStrict url))
 
-instance (IsName n) => EmbedAsAttr MailingListM (Attr n ClckURL) where
+instance (IsName n TL.Text) => EmbedAsAttr MailingListM (Attr n ClckURL) where
         asAttr (n := url) =
             do showFn <- mailingListClckURL <$> ask
-               asAttr $ MkAttr (toName n, pAttrVal (T.unpack $ showFn url []))
+               asAttr $ MkAttr (toName n, pAttrVal (TL.fromStrict $ showFn url []))
 
 runMailingListT :: MailingListConfig -> MailingListT m a -> ClckT MailingListURL m a
 runMailingListT mc m = mapClckT f m

@@ -67,7 +67,7 @@ runMailingListT' plugins m =
 
 
 
-mailingListPlugin :: Plugin MailingListURL Theme (ClckT ClckURL (ServerPartT IO) Response) (ClckT ClckURL IO ()) ClckwrksConfig [TL.Text -> ClckT ClckURL IO TL.Text]
+mailingListPlugin :: Plugin MailingListURL Theme (ClckT ClckURL (ServerPartT IO) Response) (ClckT ClckURL IO ()) ClckwrksConfig ClckPluginsSt
 mailingListPlugin = Plugin
     { pluginName       = "mailingList"
     , pluginInit       = mailingListInit

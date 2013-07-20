@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -F -pgmFhsx2hs #-}
 module Clckwrks.MailingList.PreProcess where
 
 import Control.Monad.Trans
@@ -18,8 +18,7 @@ import qualified Data.Text.Lazy         as TL
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as B
 import HSP
-import HSP.HTML                         (renderAsHTML)
-import HSP.Identity                     (evalIdentity)
+import HSP.HTML4                         (renderAsHTML)
 import Text.Reform.Happstack            (happstackViewForm)
 import Text.Reform.HSP.Text             (form)
 import Web.Routes                       (showURL)
@@ -55,7 +54,7 @@ applyCmd :: (MailingListURL -> [(Text, Maybe Text)] -> Text)
          -> MailingListT IO Builder
 applyCmd mailingListShowURL SubscribeFormLink =
     do html <- unXMLGenT $ <a href=(mailingListShowURL Subscribe [])>Join our mailing list!</a>
-       return $ B.fromString $ concat $ lines $ renderAsHTML html
+       return $ B.fromString $ concat $ lines $ TL.unpack $ renderAsHTML html
 {-
 foo =
     do html <- happstackViewForm (form "") "sub" emailForm
