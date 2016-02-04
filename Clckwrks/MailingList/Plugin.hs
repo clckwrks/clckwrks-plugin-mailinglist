@@ -10,6 +10,7 @@ import Clckwrks.MailingList.Monad
 import Clckwrks.MailingList.Route
 import Control.Monad.State         (get)
 import Data.Acid.Local
+import qualified Data.Set           as Set
 import Data.Text                   (Text)
 import qualified Data.Text.Lazy    as TL
 import Data.Maybe                  (fromMaybe)
@@ -46,14 +47,15 @@ mailingListInit plugins =
        addPreProc plugins (\txt-> runMailingListT'' mailingListShowFn mailingListConfig $ mailingListCmd mailingListShowFn txt)
        addHandler plugins (pluginName mailingListPlugin) (mailingListHandler mailingListShowFn mailingListConfig)
        return Nothing
-{-
+
 addMailingListAdminMenu :: ClckT url IO ()
 addMailingListAdminMenu =
     do p <- plugins <$> get
        (Just showMailingListURL) <- getPluginRouteFn p (pluginName mailingListPlugin)
-       let editMilestonesURL = showMailingListURL (MailingListAdmin EditMilestones) []
-       addAdminMenu ("MailingList", [("Edit Milestones", editMilestonesURL)])
--}
+       let editMLSettingsURL = showMailingListURL (MailingListAdmin EditMLSettings) []
+       addAdminMenu ("MailingList",
+                       [(Set.fromList [Administrator], "Edit Settings", editMLSettingsURL)])
+
 runMailingListT' :: MonadIO m =>
                     ClckPlugins
                  -> MailingListT m a
@@ -73,7 +75,7 @@ mailingListPlugin = Plugin
     , pluginInit       = mailingListInit
     , pluginDepends    = []
     , pluginToPathInfo = toPathInfo
-    , pluginPostHook   = return () -- addMailingListAdminMenu
+    , pluginPostHook   = addMailingListAdminMenu
     }
 
 plugin :: ClckPlugins -- ^ plugins
