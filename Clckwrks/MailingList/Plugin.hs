@@ -9,6 +9,7 @@ import Clckwrks.MailingList.PreProcess    (mailingListCmd)
 import Clckwrks.MailingList.Monad
 import Clckwrks.MailingList.Route
 import Control.Monad.State         (get)
+import Data.Acid                   (AcidState)
 import Data.Acid.Local
 import qualified Data.Set           as Set
 import Data.Text                   (Text)
@@ -31,6 +32,12 @@ mailingListHandler showMailingListURL mailingListConfig plugins paths =
       flattenURL ::   ((url' -> [(Text, Maybe Text)] -> Text) -> (MailingListURL -> [(Text, Maybe Text)] -> Text))
       flattenURL _ u p = showMailingListURL u p
 
+navBarCallback :: (MailingListURL -> [(Text, Maybe Text)] -> Text)
+             -> ClckT ClckURL IO (String, [NamedLink])
+navBarCallback showMailingListURL =
+  do let subscribeLink = NamedLink { namedLinkTitle = "Subscribe", namedLinkURL = showMailingListURL Subscribe [] }
+     pure ("Mailing List", [subscribeLink])
+
 mailingListInit :: ClckPlugins
          -> IO (Maybe Text)
 mailingListInit plugins =
@@ -45,6 +52,7 @@ mailingListInit plugins =
                , mailingListClckURL   = clckShowFn
                }
        addPreProc plugins (\txt-> runMailingListT'' mailingListShowFn mailingListConfig $ mailingListCmd mailingListShowFn txt)
+       addNavBarCallback plugins (navBarCallback mailingListShowFn)
        addHandler plugins (pluginName mailingListPlugin) (mailingListHandler mailingListShowFn mailingListConfig)
        return Nothing
 

@@ -23,6 +23,7 @@ import qualified Data.Text    as Text
 import Data.Time              (UTCTime(..))
 import Data.UUID              (UUID)
 import Clckwrks.MailingList.Types (Email(..), Message(..), msgId, MessageId(..), Subscriber(..), subId, subStatus, SubscriptionStatus(..), SubscriberId(..), incSubscriberId)
+import System.FilePath        (FilePath)
 
 data MailingListState = MailingListState
     { _subscribers       :: IxSet Subscriber
@@ -31,6 +32,7 @@ data MailingListState = MailingListState
     , _nextMessageId     :: MessageId
     , _contactAddr       :: Maybe Email
     , _optInConfirm      :: Maybe MessageId
+    , _sendmailPath      :: Maybe FilePath
     }
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 deriveSafeCopy 0 'base ''MailingListState
@@ -58,6 +60,7 @@ initialMailingListState = MailingListState
     , _nextMessageId    = MessageId 1
     , _contactAddr      = Nothing
     , _optInConfirm     = Nothing
+    , _sendmailPath     = Nothing
     }
 
 -- | FIXME: behavior if email already exists
@@ -147,21 +150,27 @@ getOptInConfirmMessage =
       (Just messageId) ->
         view (messages . at messageId)
 
-getMailingListSettings :: Query MailingListState (Maybe Email, Maybe Message)
+getMailingListSettings :: Query MailingListState (Maybe FilePath, Maybe Email, Maybe Message)
 getMailingListSettings =
-  do mEmail <- view contactAddr
+  do mSendmail <- view sendmailPath
+     mEmail <- view contactAddr
      mId <- view optInConfirm
      case mId of
-      Nothing -> pure (mEmail, Nothing)
+      Nothing -> pure (mSendmail, mEmail, Nothing)
       (Just mid) ->
         do mMessage <- view (messages . at mid)
-           pure (mEmail, mMessage)
+           pure (mSendmail, mEmail, mMessage)
 
-setMailingListSettings :: Maybe Email
+getSendmailPath :: Query MailingListState (Maybe FilePath)
+getSendmailPath = view sendmailPath
+
+setMailingListSettings :: Maybe FilePath
+                       -> Maybe Email
                        -> Maybe Message
                        -> Update MailingListState ()
-setMailingListSettings mEmail mMessage =
-  do contactAddr .= mEmail
+setMailingListSettings mSendmail mEmail mMessage =
+  do sendmailPath .= mSendmail
+     contactAddr .= mEmail
      case mMessage of
        Nothing -> do
          optInConfirm .= Nothing
@@ -177,4 +186,5 @@ $(makeAcidic ''MailingListState
   , 'verifyOptIn
   , 'getMailingListSettings
   , 'setMailingListSettings
+  , 'getSendmailPath
   ])

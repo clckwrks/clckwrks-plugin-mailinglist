@@ -44,6 +44,7 @@ data MailingListFormError
     | InvalidEmail
     | MissingLink
     | MissingSubject
+    | SendmailNotFound
       deriving Show
 
 instance FormError MailingListFormError where
