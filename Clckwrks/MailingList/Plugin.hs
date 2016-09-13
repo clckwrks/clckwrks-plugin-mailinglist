@@ -60,9 +60,17 @@ addMailingListAdminMenu :: ClckT url IO ()
 addMailingListAdminMenu =
     do p <- plugins <$> get
        (Just showMailingListURL) <- getPluginRouteFn p (pluginName mailingListPlugin)
-       let editMLSettingsURL = showMailingListURL (MailingListAdmin EditMLSettings) []
+       let editMLSettingsURL = showMailingListURL (MailingListAdmin EditMLSettings)  []
+--           sendMailingURL    = showMailingListURL (MailingListAdmin SendMailing)     []
+           subscribersURL    = showMailingListURL (MailingListAdmin ViewSubscribers) []
+           viewMessagesURL   = showMailingListURL (MailingListAdmin ViewMessages)    []
        addAdminMenu ("MailingList",
-                       [(Set.fromList [Administrator], "Edit Settings", editMLSettingsURL)])
+                       [ (Set.fromList [Administrator], "Edit Settings", editMLSettingsURL)
+--                       , (Set.fromList [Administrator], "Send Mailing", sendMailingURL)
+                       , (Set.fromList [Administrator], "Subscribers", subscribersURL)
+                       , (Set.fromList [Administrator], "View Messages", viewMessagesURL)
+                       ])
+
 
 runMailingListT' :: MonadIO m =>
                     ClckPlugins

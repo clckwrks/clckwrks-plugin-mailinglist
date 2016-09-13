@@ -8,7 +8,7 @@ Author:              Jeremy Shaw
 Maintainer:          Jeremy Shaw <jeremy@n-heptane.com>
 Copyright:           2012 Jeremy Shaw, SeeReason Partners LLC
 Category:            Clckwrks
-Build-type:          Custom
+Build-type:          Simple
 Cabal-version:       >=1.6
 Data-Files:
     data/style.css
@@ -22,6 +22,10 @@ Library
   Exposed-modules:
                   Clckwrks.MailingList.Acid
                   Clckwrks.MailingList.Admin.MailingListSettings
+                  Clckwrks.MailingList.Admin.EditMessage
+                  Clckwrks.MailingList.Admin.SendMessage
+                  Clckwrks.MailingList.Admin.ViewMessages
+                  Clckwrks.MailingList.Admin.ViewSubscribers
                   Clckwrks.MailingList.Monad
                   Clckwrks.MailingList.Plugin
                   Clckwrks.MailingList.Page.ConfirmOptIn

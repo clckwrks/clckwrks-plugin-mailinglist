@@ -4,6 +4,7 @@ module Clckwrks.MailingList.Acid where
 import Control.Lens  ((^.), (.=), (?=), (^?), view, set, over)
 import Control.Lens.At (at)
 import Control.Applicative    ((<$>))
+import Control.Lens.At        (at)
 import Control.Lens.TH        (makeLenses)
 import Control.Lens.Prism     (_Just)
 import Control.Monad.Reader   (ask)
@@ -17,26 +18,44 @@ import qualified Data.Map     as Map
 import Data.Monoid            ((<>))
 import Data.Ratio             ((%))
 import Data.SafeCopy          (base, deriveSafeCopy, extension, Migrate(..))
-import Data.Set               as Set
+import           Data.Set     (Set)
+import qualified Data.Set     as Set
 import           Data.Text    (Text)
 import qualified Data.Text    as Text
 import Data.Time              (UTCTime(..))
 import Data.UUID              (UUID)
-import Clckwrks.MailingList.Types (Email(..), Message(..), msgId, MessageId(..), Subscriber(..), subId, subStatus, SubscriptionStatus(..), SubscriberId(..), incSubscriberId)
+import Clckwrks.MailingList.Types (Email(..), Message(..), msgId, MessageId(..), Subscriber(..), subId, subStatus, SubscriptionStatus(..), SubscriberId(..), incSubscriberId, msgSubject, msgId)
 import System.FilePath        (FilePath)
+
+data MailingListState_0 = MailingListState_0
+    { _subscribers_0       :: IxSet Subscriber
+    , _nextSubscriberId_0  :: SubscriberId
+    , _messages_0          :: Map MessageId Message
+    , _nextMessageId_0     :: MessageId
+    , _contactAddr_0       :: Maybe Email
+    , _optInConfirm_0      :: Maybe MessageId
+    , _sendmailPath_0      :: Maybe FilePath
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
+deriveSafeCopy 0 'base ''MailingListState_0
 
 data MailingListState = MailingListState
     { _subscribers       :: IxSet Subscriber
     , _nextSubscriberId  :: SubscriberId
     , _messages          :: Map MessageId Message
+    , _mailLog           :: Set (MessageId, SubscriberId, UTCTime)
     , _nextMessageId     :: MessageId
     , _contactAddr       :: Maybe Email
     , _optInConfirm      :: Maybe MessageId
     , _sendmailPath      :: Maybe FilePath
     }
     deriving (Eq, Ord, Read, Show, Data, Typeable)
-deriveSafeCopy 0 'base ''MailingListState
+deriveSafeCopy 1 'extension ''MailingListState
 makeLenses ''MailingListState
+
+instance Migrate MailingListState where
+  type MigrateFrom MailingListState = MailingListState_0
+  migrate (MailingListState_0 s ns m nm ca oic sp) = MailingListState s ns m Set.empty nm ca oic sp
 
 optInConfirmMsgId :: MessageId
 optInConfirmMsgId = MessageId 1
@@ -57,6 +76,7 @@ initialMailingListState = MailingListState
     { _subscribers      = IxSet.empty
     , _nextSubscriberId = SubscriberId 1
     , _messages         = Map.empty
+    , _mailLog          = Set.empty
     , _nextMessageId    = MessageId 1
     , _contactAddr      = Nothing
     , _optInConfirm     = Nothing
@@ -80,6 +100,17 @@ addSubscriber email subscriptionStatus now =
         (Just subscriber) ->
           pure subscriber
 
+askSubscribers :: Query MailingListState (IxSet Subscriber)
+askSubscribers =
+  do ms <- ask
+     pure $ ms ^. subscribers
+{-
+askActiveSubscribers :: Query MailingListState (IxSet Subscriber)
+askActiveSubscribers =
+  do ms <- ask
+     case (ms ^. subscribers) @= Subscribed of
+       subs -> pure $ filter (\sub -> head (sub ^. subStatus) == Subscribed) IxSet.toList
+-}
 signupSubscriber :: Email -> SubscriptionStatus -> UTCTime -> Update MailingListState Subscriber
 signupSubscriber email subscriptionStatus now =
     do ms@MailingListState{..} <- get
@@ -178,8 +209,29 @@ setMailingListSettings mSendmail mEmail mMessage =
          optInConfirm .= over _Just (^. msgId) mMessage
          messages . at (message ^. msgId) ?= message
 
+addMailLogEntry :: (MessageId, SubscriberId, UTCTime) -> Update MailingListState ()
+addMailLogEntry entry =
+  do mls@MailingListState {..} <- get
+     put $ mls { _mailLog = Set.insert entry _mailLog }
+
+askMessageSubjects :: Query MailingListState [(MessageId, Text)]
+askMessageSubjects =
+  do mls <- ask
+     pure $ map (\(i, m) -> (i, m ^. msgSubject)) (Map.toList $ mls ^. messages)
+
+messageById :: MessageId -> Query MailingListState (Maybe Message)
+messageById msgid =
+  view (messages . at msgid)
+
+updateMessage :: Message -> Update MailingListState ()
+updateMessage msg =
+  messages . at (msg ^. msgId) .= Just msg
+
 $(makeAcidic ''MailingListState
   [ 'addSubscriber
+  , 'addMailLogEntry
+  , 'askSubscribers
+--  , 'askActiveSubscriber
   , 'changeSubscriptionStatus
   , 'getOptInConfirmMessage
   , 'signupSubscriber
@@ -187,4 +239,7 @@ $(makeAcidic ''MailingListState
   , 'getMailingListSettings
   , 'setMailingListSettings
   , 'getSendmailPath
+  , 'askMessageSubjects
+  , 'messageById
+  , 'updateMessage
   ])

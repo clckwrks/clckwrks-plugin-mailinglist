@@ -65,9 +65,17 @@ instance Indexable Subscriber where
                   ]
 
 -- not to be confused with message-id header
-newtype MessageId = MessageId { unMessageId :: Integer }
+newtype MessageId = MessageId { _unMessageId :: Integer }
     deriving (Eq, Ord, Read, Show, Data, Typeable, PathInfo)
 deriveSafeCopy 0 'base ''MessageId
+makeLenses ''MessageId
+
+data MessageStatus
+    = Draft
+    | Sent UTCTime
+    | Scheduled UTCTime
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
+deriveSafeCopy 0 'base ''MessageStatus
 
 data Message = Message
     { _msgId      :: MessageId
@@ -79,21 +87,6 @@ data Message = Message
 deriveSafeCopy 0 'base ''Message
 makeLenses ''Message
 
-data MessageStatus
-    = Draft
-    | Sent UTCTime
-    | Scheduled UTCTime
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
-deriveSafeCopy 0 'base ''MessageStatus
-{-
-data Envelope = Envelope
-    { envStatus :: MessageStatus
-    , envMsg    :: Message
-    }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
-deriveSafeCopy 0 'base ''Envelope
-makeLenses ''Envelope
--}
 instance Indexable Message where
   empty = ixSet $ [ ixFun $ (:[]) . _msgId
                   ]
