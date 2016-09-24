@@ -23,6 +23,7 @@ Library
                   Clckwrks.MailingList.Acid
                   Clckwrks.MailingList.Admin.MailingListSettings
                   Clckwrks.MailingList.Admin.EditMessage
+                  Clckwrks.MailingList.Admin.NewMessage
                   Clckwrks.MailingList.Admin.SendMessage
                   Clckwrks.MailingList.Admin.ViewMessages
                   Clckwrks.MailingList.Admin.ViewSubscribers

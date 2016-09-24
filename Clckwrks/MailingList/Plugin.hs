@@ -64,10 +64,12 @@ addMailingListAdminMenu =
 --           sendMailingURL    = showMailingListURL (MailingListAdmin SendMailing)     []
            subscribersURL    = showMailingListURL (MailingListAdmin ViewSubscribers) []
            viewMessagesURL   = showMailingListURL (MailingListAdmin ViewMessages)    []
+           newMessageURL   = showMailingListURL (MailingListAdmin NewMessage)    []
        addAdminMenu ("MailingList",
                        [ (Set.fromList [Administrator], "Edit Settings", editMLSettingsURL)
 --                       , (Set.fromList [Administrator], "Send Mailing", sendMailingURL)
                        , (Set.fromList [Administrator], "Subscribers", subscribersURL)
+                       , (Set.fromList [Administrator], "New Message", newMessageURL)
                        , (Set.fromList [Administrator], "View Messages", viewMessagesURL)
                        ])
 

@@ -3,7 +3,7 @@ module Clckwrks.MailingList.Admin.SendMessage where
 
 import Clckwrks                    (query, update)
 import Clckwrks.Admin.Template     (template)
-import Clckwrks.MailingList.Acid   ()
+import Clckwrks.MailingList.Acid   (MessageById(..))
 import Clckwrks.MailingList.Monad  (MailingListConfig(mailingListClckURL), MailingListM, MailingListForm, MailingListFormError(InvalidEmail, MissingSubject, MissingLink, SendmailNotFound))
 import Clckwrks.MailingList.Types  (Email(..), Message(..), MessageId, msgId, msgFrom, msgSubject, msgBody, unEmail, unMessageId)
 import Clckwrks.MailingList.URL
@@ -15,7 +15,7 @@ import Data.Text                   (Text)
 import qualified Data.Text         as T
 import qualified Data.Text.Lazy    as L
 import Language.Haskell.HSX.QQ     (hsx)
-import Happstack.Server            (Response, seeOther, toResponse)
+import Happstack.Server            (Response, seeOther, toResponse, notFound)
 import HSP
 import System.Directory            (doesFileExist)
 import Text.Html.Email.Validate (isValidEmail)
@@ -26,10 +26,25 @@ import Text.Reform.Happstack (reform)
 import Text.Reform.HSP.Text (form, inputEmail, inputText, setAttrs, label, labelText, inputSubmit, errorList, textarea, fieldset)
 import Web.Routes (showURL)
 
-sendMessage :: MailingListURL -> MessageId -> MailingListM Response
+sendMessage :: MailingListURL
+            -> MessageId
+            -> MailingListM Response
 sendMessage here mid =
   do template "send message" () $
-       [hsx| <h1>Send Message <% show $ mid ^. unMessageId %></h1> |]
+      do mMsg <- query (MessageById mid)
+         case mMsg of
+           Nothing ->
+             do html <- [hsx| <p>Message <% show $ mid ^. unMessageId %> not found.</p> |]
+                notFound $ html
+           (Just msg) ->
+             [hsx| <div>
+                    <h1>Send Message <% show $ mid ^. unMessageId %></h1>
+                    <h2>Preview</h2>
+                    <div>From: <%msg ^. msgFrom ^. unEmail %></div>
+                    <div>Subject: <%msg ^. msgSubject %></div>
+                    <pre><%msg ^. msgBody %></pre>
+                   </div>
+                 |]
 {-
   do template "send mailing" () $
        [hsx| <%>

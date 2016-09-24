@@ -7,6 +7,7 @@ import Control.Monad.Trans          (liftIO)
 import Clckwrks                     (Role(..), requiresRole_)
 import Clckwrks.MailingList.Admin.EditMessage (editMessage)
 import Clckwrks.MailingList.Admin.MailingListSettings (mailingListSettings)
+import Clckwrks.MailingList.Admin.NewMessage (newMessage)
 import Clckwrks.MailingList.Admin.SendMessage(sendMessage)
 import Clckwrks.MailingList.Admin.ViewMessages (viewMessages)
 import Clckwrks.MailingList.Admin.ViewSubscribers (viewSubscribers)
@@ -39,6 +40,7 @@ routeMailingListAdmin url =
       (SendMessage msgid) -> sendMessage (MailingListAdmin url) msgid
       (EditMessage msgid) -> editMessage (MailingListAdmin url) msgid
       ViewMessages        -> viewMessages (MailingListAdmin url)
+      NewMessage          -> newMessage (MailingListAdmin url)
 
 routeMailingList :: MailingListURL
                  -> MailingListM Response

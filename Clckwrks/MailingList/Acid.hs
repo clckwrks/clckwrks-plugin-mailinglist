@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, RecordWildCards, TemplateHaskell, TypeFamilies, OverloadedStrings #-}
 module Clckwrks.MailingList.Acid where
 
-import Control.Lens  ((^.), (.=), (?=), (^?), view, set, over)
+import Control.Lens  ((^.), (.=), (?=), (^?), (&), (.~), view, set, over)
 import Control.Lens.At (at)
 import Control.Applicative    ((<$>))
 import Control.Lens.At        (at)
@@ -77,7 +77,7 @@ initialMailingListState = MailingListState
     , _nextSubscriberId = SubscriberId 1
     , _messages         = Map.empty
     , _mailLog          = Set.empty
-    , _nextMessageId    = MessageId 1
+    , _nextMessageId    = MessageId 2
     , _contactAddr      = Nothing
     , _optInConfirm     = Nothing
     , _sendmailPath     = Nothing
@@ -227,6 +227,15 @@ updateMessage :: Message -> Update MailingListState ()
 updateMessage msg =
   messages . at (msg ^. msgId) .= Just msg
 
+createMessage :: Update MailingListState MessageId
+createMessage =
+  do mls <- get
+     let msgid = mls ^. nextMessageId
+         msg = Message msgid (Email mempty) mempty mempty
+     put $ mls & (messages . at msgid) .~ Just msg
+               & nextMessageId .~ succ msgid
+     pure msgid
+
 $(makeAcidic ''MailingListState
   [ 'addSubscriber
   , 'addMailLogEntry
@@ -242,4 +251,5 @@ $(makeAcidic ''MailingListState
   , 'askMessageSubjects
   , 'messageById
   , 'updateMessage
+  , 'createMessage
   ])

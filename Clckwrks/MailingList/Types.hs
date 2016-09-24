@@ -66,7 +66,7 @@ instance Indexable Subscriber where
 
 -- not to be confused with message-id header
 newtype MessageId = MessageId { _unMessageId :: Integer }
-    deriving (Eq, Ord, Read, Show, Data, Typeable, PathInfo)
+    deriving (Eq, Ord, Read, Show, Data, Typeable, PathInfo, Enum)
 deriveSafeCopy 0 'base ''MessageId
 makeLenses ''MessageId
 
