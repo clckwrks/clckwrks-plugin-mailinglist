@@ -81,6 +81,8 @@ initialMailingListState = MailingListState
     , _contactAddr      = Nothing
     , _optInConfirm     = Nothing
     , _sendmailPath     = Nothing
+--    , _sendQueue        = [(SubscriberId, MessageId)]
+--    , _mailLog          = Set (SubscriberId, MessageId, UTCTime)
     }
 
 -- | FIXME: behavior if email already exists

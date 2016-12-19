@@ -38,11 +38,13 @@ subscribePage here =
           (Just optInConfirmMsg) ->
             template (fromString "Subscribe to Our Mailing List") ()
                  [hsx|
-                  <div>
-                   <h1>Subscribe</h1>
-                   <p>Enter your email to subscribe to our mailing list. A confirmation link will be sent to your email address. You must click on the link to complete your subscription. You can unsubscribe at anytime.</p>
-                   <% reform (form here) "sub" (subscribe optInConfirmMsg) Nothing emailForm %>
-                  </div>
+                  <section class="section">
+                   <div class="container">
+                     <h1 class="title is-1">Subscribe</h1>
+                     <p>Enter your email to subscribe to our mailing list. A confirmation link will be sent to your email address. You must click on the link to complete your subscription. You can unsubscribe at anytime.</p>
+                     <% reform (form here) "sub" (subscribe optInConfirmMsg) Nothing emailForm %>
+                   </div>
+                 </section>
                  |]
           Nothing ->
             template (fromString "Server Configuration Error") ()
@@ -77,13 +79,16 @@ subscribePage here =
                     <p>A confirmation email has been sent to your email address. You must click on the link in the email to confirm your subscription.</p>
                   |]
 
-emailForm :: MailingListForm Email
+type MailingListFormT m = ClckFormT MailingListFormError (MailingListT m)
+emailForm :: (Functor m, MonadIO m, Happstack m) => MailingListFormT m Email
 emailForm =
-  (formGrp (errorList ++> label ("Email:" :: Text) ++> (inputEmail mempty `transformEither` email))) <*
-  (formGrp (inputSubmit (pack "subscribe") `setAttrs` [("class" := "btn btn-default"):: Attr Text Text]))
+  (formGrp (errorList ++> (label ("Email:" :: Text) `setAttrs` [("class" := "label"):: Attr Text Text]) ++>
+            (p $ (inputEmail mempty `setAttrs` [("class" := "input"):: Attr Text Text]) `transformEither` email))) <*
+  (formGrp (inputSubmit (pack "subscribe") `setAttrs` [("class" := "button btn btn-default"):: Attr Text Text]))
 
   where
-    formGrp frm = mapView (\xml -> [hsx| [<div class="form-group"><% xml %></div>] |]) frm
+    p frm = mapView (\xml -> [hsx| [<p class="control"><% xml %></p>] |]) frm
+    formGrp frm = mapView (\xml -> [hsx| [<div class="form-group control"><% xml %></div>] |]) frm
     email addr =
       if isValidEmail addr
        then Right $ Email addr
